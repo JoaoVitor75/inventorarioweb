@@ -41,6 +41,17 @@ interface Product {
   image: string;
 }
 
+interface Transaction {
+  id: number;
+  type: 'entrada' | 'saida';
+  date: string;
+  productId: number;
+  quantity: number;
+  totalValue: number;
+  orderId?: number;
+  description: string;
+}
+
 export function ProductsPage() {
   const isValidPrice = (price: number) => price > 0;
   const isValidQuantity = (quantity: number) =>
@@ -54,8 +65,7 @@ export function ProductsPage() {
     }
   };
 
-  const { products, setProducts, suppliers } = useAppContext();
-
+  const { products, setProducts, suppliers, transactions, setTransactions } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
     name: "",
@@ -71,7 +81,7 @@ export function ProductsPage() {
 
   const handleAddProduct = () => {
     if (!isValidPrice(newProduct.price)) {
-      alert("O preço deve ser maior que 0.");
+      alert("O preço deve ser maior que zero.");
       return;
     }
     if (!isValidQuantity(newProduct.stock)) {
@@ -82,10 +92,23 @@ export function ProductsPage() {
       alert("A URL da imagem é inválida.");
       return;
     }
-    setProducts([...products, { ...newProduct, id: Date.now() }]);
+  
+    const product = { ...newProduct, id: Date.now() };
+    setProducts([...products, product]);
+  
+    const transaction: Transaction = {
+      id: Date.now(),
+      type: 'entrada' as const,
+      date: new Date().toISOString().split('T')[0],
+      productId: product.id,
+      quantity: product.stock,
+      totalValue: product.price * product.stock,
+      description: 'Estoque inicial'
+    };
+    
+    setTransactions([...transactions, transaction]);
     setNewProduct({ name: '', category: '', price: 0, stock: 0, supplier: '', image: '' });
   };
-
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
   };
@@ -104,6 +127,22 @@ export function ProductsPage() {
         alert("A URL da imagem é inválida.");
         return;
       }
+      setProducts(products.map(p => p.id === editingProduct.id ? editingProduct : p));
+      setEditingProduct(null);
+    }
+ 
+    if (editingProduct) {
+      const originalProduct = products.find(p => p.id === editingProduct.id);
+      const stockDifference = editingProduct.stock - (originalProduct?.stock || 0);
+      
+      if (stockDifference !== 0) {
+        handleProductTransaction(
+          editingProduct,
+          Math.abs(stockDifference),
+          stockDifference > 0 ? 'entrada' : 'saida'
+        );
+      }
+      
       setProducts(products.map(p => p.id === editingProduct.id ? editingProduct : p));
       setEditingProduct(null);
     }
@@ -126,29 +165,23 @@ export function ProductsPage() {
     });
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-full mx-auto">
-        <h1 className="text-4xl font-extrabold text-indigo-900 mb-10 text-center">
-          Gerenciamento de Produtos
-        </h1>
+    <div className="page-container">
+    <div className="page-content">
+      <h1 className="page-title">Gerenciamento de Produtos</h1>
 
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
-            <div className="flex items-center space-x-2 w-full md:w-1/2">
-              <Input
-                placeholder="Buscar produtos..."
-                className="w-full rounded-full border-2 border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Button
-                size="icon"
-                variant="outline"
-                className="rounded-full bg-indigo-500 text-white hover:bg-indigo-600"
-              >
-                <Search className="h-6 w-6" />
-              </Button>
-            </div>
+      <div className="content-card">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
+          <div className="search-bar">
+            <Input 
+              placeholder="Buscar produtos..." 
+              className="search-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Button size="icon" variant="outline" className="search-button">
+              <Search className="h-6 w-6" />
+            </Button>
+          </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -554,3 +587,7 @@ export function ProductsPage() {
 }
 
 export default ProductsPage;
+function handleProductTransaction(product: { id: number; name: string; category: string; price: number; stock: number; supplier: string; image: string; }, stock: number, arg2: string) {
+  throw new Error("Function not implemented.");
+}
+

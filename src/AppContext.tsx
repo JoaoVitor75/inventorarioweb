@@ -30,9 +30,27 @@ interface Client {
 interface Order {
   id: number;
   clientId: number;
-  date: string;
-  status: string;
+  date: Date;
+  status: 'pending' | 'completed' | 'cancelled';
+  items: OrderItem[];
   total: number;
+}
+
+interface OrderItem {
+  productId: number;
+  quantity: number;
+  price: number;
+}
+
+interface Transaction {
+  id: number;
+  type: 'entrada' | 'saida';
+  date: string;
+  productId: number;
+  quantity: number;
+  totalValue: number;
+  orderId?: number;
+  description: string;
 }
 
 interface AppContextType {
@@ -44,18 +62,48 @@ interface AppContextType {
   setClients: React.Dispatch<React.SetStateAction<Client[]>>;
   orders: Order[];
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+  transactions: Transaction[];
+  setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const handleProductTransaction = (product: Product, quantity: number, type: 'entrada' | 'saida', orderId?: number) => {
+    const newTransaction = {
+      id: Date.now(),
+      type,
+      date: new Date().toISOString().split('T')[0],
+      productId: product.id,
+      quantity,
+      totalValue: product.price * quantity,
+      orderId,
+      description: orderId ? `Pedido #${orderId}` : `${type === 'entrada' ? 'Adição' : 'Remoção'} manual de estoque`
+    };
+    
+    setTransactions(prev => [...prev, newTransaction]);
+  };
+  
   return (
-    <AppContext.Provider value={{ products, setProducts, suppliers, setSuppliers, clients, setClients, orders, setOrders }}>
+    <AppContext.Provider value={{
+      products,
+      setProducts,
+      suppliers,
+      setSuppliers,
+      clients,
+      setClients,
+      orders,
+      setOrders,
+      transactions,
+      setTransactions,
+    }}>
       {children}
     </AppContext.Provider>
   );

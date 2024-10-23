@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import '../index.css'
+import '../styles/PageStyles.css'
 
 import {
   Table,
@@ -100,23 +101,24 @@ const handleAddSupplier = () => {
     });
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-full mx-auto">
-        <h1 className="text-4xl font-extrabold text-indigo-900 mb-10 text-center">Gerenciamento de Fornecedores</h1>
-        
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
-            <div className="flex items-center space-x-2 w-full md:w-1/2">
-              <Input 
-                placeholder="Buscar fornecedores..." 
-                className="w-full rounded-full border-2 border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Button size="icon" variant="outline" className="rounded-full bg-indigo-500 text-white hover:bg-indigo-600">
-                <Search className="h-6 w-6" />
-              </Button>
-            </div>
+    <div className="page-container">
+    <div className="page-content">
+      <h1 className="page-title">Gerenciamento de Fornecedores</h1>
+      
+      <div className="content-card">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
+          <div className="search-bar">
+            <Input 
+              placeholder="Buscar fornecedores..." 
+              className="search-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Button size="icon" variant="outline" className="search-button">
+              <Search className="h-6 w-6" />
+            </Button>
+          </div>
+  
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">Filtrar por {filterType === 'name' ? 'Nome' : 'Contato'}</Button>

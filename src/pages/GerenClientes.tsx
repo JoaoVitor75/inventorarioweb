@@ -384,7 +384,7 @@ export function ClientsPage() {
                         {order.id}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700">
-                        {order.date}
+                        {order.date.toLocaleDateString()}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700">
                         {order.status}

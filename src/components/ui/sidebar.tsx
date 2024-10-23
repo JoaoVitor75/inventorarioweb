@@ -1,4 +1,4 @@
-import { Home, HandCoins, Package, Package2, Settings, ShoppingCart, Users2 } from 'lucide-react';
+import { Home, HandCoins, Package, Package2, Settings, ShoppingCart, Users2, DollarSign  } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
@@ -29,7 +29,7 @@ const Sidebar = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
-                to="/"
+                to="/orders"
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <ShoppingCart className="h-5 w-5" />
@@ -69,6 +69,18 @@ const Sidebar = () => {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <HandCoins className="h-5 w-5" />
+                <span className="sr-only">Analytics</span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">Analytics</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                to="/transactions"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              >
+                <DollarSign  className="h-5 w-5" />
                 <span className="sr-only">Analytics</span>
               </Link>
             </TooltipTrigger>
