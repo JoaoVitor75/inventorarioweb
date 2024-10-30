@@ -125,3 +125,11 @@
   padding: 6px;
   margin-left: 0.5rem;
 }
+
+.text-bold {
+  font-weight: bold;
+}
+
+.text-darker {
+  color: #000;
+}

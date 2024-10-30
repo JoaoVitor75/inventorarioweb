@@ -50,7 +50,7 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #5a5959;
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -135,10 +135,16 @@ button:focus-visible {
 
 
 @layer base {
+  :root {
+    --border-border: initial;
+    --bg-background: initial;
+    --text-foreground: initial;
+  }
   * {
-    @apply border-border;
+    border: var(--border-border);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--bg-background);
+    color: var(--text-foreground);
   }
 }

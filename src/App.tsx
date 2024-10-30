@@ -7,6 +7,7 @@ import OrdersPage from './pages/GerenPedidos';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import Sidebar from './components/ui/sidebar';
 import { GerenTransFinan } from "./pages/GerenTransFinan";
+import Login from './pages/Login';
 
 const App = () => {
   return (
@@ -16,7 +17,7 @@ const App = () => {
         <Sidebar />
         </TooltipProvider>
           <Routes>
-            <Route path="/" element={<ProductsPage />} />
+            <Route path="/" element={<Login />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/suppliers" element={<SuppliersPage />} />
             <Route path="/clients" element={<ClientsPage />} />

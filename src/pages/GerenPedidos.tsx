@@ -54,7 +54,7 @@ interface Order {
 
 interface Transaction {
   id: number;
-  type: 'entrada' | 'saida';
+  type: "entrada" | "saida";
   date: string;
   productId: number;
   quantity: number;
@@ -64,7 +64,14 @@ interface Transaction {
 }
 
 export function OrdersPage() {
-  const { orders, setOrders, clients, products, transactions, setTransactions } = useAppContext();
+  const {
+    orders,
+    setOrders,
+    clients,
+    products,
+    transactions,
+    setTransactions,
+  } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [filterStatus, setFilterStatus] = useState<Order["status"] | "all">(
@@ -131,7 +138,6 @@ export function OrdersPage() {
       0
     );
 
-  
     const newOrderWithItems = {
       ...newOrder,
       id: orderId,
@@ -140,15 +146,15 @@ export function OrdersPage() {
       total,
     };
 
-    const newTransactions = currentOrderItems.map(item => ({
+    const newTransactions = currentOrderItems.map((item) => ({
       id: Date.now() + item.productId,
-      type: 'saida' as const,
-      date: new Date().toISOString().split('T')[0],
+      type: "saida" as const,
+      date: new Date().toISOString().split("T")[0],
       productId: item.productId,
       quantity: item.quantity,
       totalValue: item.price * item.quantity,
       orderId: orderId,
-      description: `Pedido #${orderId}`
+      description: `Pedido #${orderId}`,
     }));
 
     setTransactions([...transactions, ...newTransactions]);
@@ -251,13 +257,15 @@ export function OrdersPage() {
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
+              
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="completed">ConcluÃ­do</SelectItem>
+                <SelectItem value="completed">Concluí­do</SelectItem>
                 <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
+
             <Button
               onClick={() =>
                 setSortField(sortField === "date" ? "total" : "date")
@@ -278,9 +286,11 @@ export function OrdersPage() {
             </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="add-button">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Pedido
-                </Button>
+                <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
+                  <Button className="add-button">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Pedido
+                  </Button>
+                </div>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg rounded-2xl">
                 <DialogHeader>
@@ -365,9 +375,10 @@ export function OrdersPage() {
                   <TableHead>Data</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Total</TableHead>
-                  <TableHead>AÃ§Ãµes</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {filteredAndSortedOrders.map((order) => (
                   <TableRow key={order.id} className="table-row">
@@ -466,45 +477,86 @@ export function OrdersPage() {
             </DialogHeader>
             <div>
               <h3>Itens do Pedido:</h3>
-              {currentOrderItems.map((item, index) => (
-                <div key={index}>
-                  {products.find((p) => p.id === item.productId)?.name} -
-                  Quantidade: {item.quantity}
-                  <Button
-                    onClick={() => {
-                      const newItems = currentOrderItems.filter(
-                        (_, i) => i !== index
-                      );
-                      setCurrentOrderItems(newItems);
-                    }}
+              {currentOrderItems.map((item, index) => {
+                const product = products.find((p) => p.id === item.productId);
+                return (
+                  <div
+                    key={index}
+                    className="space-y-4 border p-4 rounded-lg mb-4"
                   >
-                    Remover
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <div>
-              <Select
-                onValueChange={(value: any) =>
-                  addProductToOrder(Number(value), 1)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Adicionar produto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <div className="flex justify-between items-center">
+                      <Select
+                        defaultValue={item.productId.toString()}
+                        onValueChange={(value) => {
+                          const newItems = [...currentOrderItems];
+                          newItems[index].productId = Number(value);
+                          setCurrentOrderItems(newItems);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um produto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((p) => (
+                            <SelectItem key={p.id} value={p.id.toString()}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          const newItems = currentOrderItems.filter(
+                            (_, i) => i !== index
+                          );
+                          setCurrentOrderItems(newItems);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Quantidade</Label>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newItems = [...currentOrderItems];
+                            newItems[index].quantity = Number(e.target.value);
+                            setCurrentOrderItems(newItems);
+                          }}
+                          min="1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Preço Unitário</Label>
+                        <Input
+                          type="number"
+                          value={item.price}
+                          onChange={(e) => {
+                            const newItems = [...currentOrderItems];
+                            newItems[index].price = Number(e.target.value);
+                            setCurrentOrderItems(newItems);
+                          }}
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+                    <div className="text-right font-semibold">
+                      Total: R$ {(item.quantity * item.price).toFixed(2)}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <Button onClick={handleUpdateOrder}>Atualizar Pedido</Button>
           </DialogContent>
         </Dialog>
-
         <Dialog open={isOrderDetailsOpen} onOpenChange={setIsOrderDetailsOpen}>
           <DialogContent className="sm:max-w-lg rounded-2xl">
             <DialogHeader>
@@ -530,7 +582,7 @@ export function OrdersPage() {
                       <div>
                         <p className="font-semibold">{product?.name}</p>
                         <p>Quantidade: {item.quantity}</p>
-                        <p>PreÃ§o: R$ {item.price.toFixed(2)}</p>
+                        <p>Preço: R$ {item.price.toFixed(2)}</p>
                       </div>
                     </div>
                   );

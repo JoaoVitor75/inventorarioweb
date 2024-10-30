@@ -3,7 +3,6 @@ import { useAppContext } from "../AppContext";
 import "../styles/pageStyles.css";
 import { Link } from "react-router-dom";
 
-
 import "../index.css";
 
 import {
@@ -65,9 +64,11 @@ export function ClientsPage() {
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
 
   const isCpfCnpjUnique = (cpfCnpj: string, clientId?: number) => {
-    return !clients.some(client => client.cpf_cnpj === cpfCnpj && client.id !== clientId);
+    return !clients.some(
+      (client) => client.cpf_cnpj === cpfCnpj && client.id !== clientId
+    );
   };
-  
+
   const validateClient = (client: Partial<Client>) => {
     const errors: string[] = [];
     if (!client.name) errors.push("Nome é obrigatório.");
@@ -79,7 +80,7 @@ export function ClientsPage() {
   const handleAddClient = () => {
     const errors = validateClient(newClient);
     if (errors.length > 0) {
-      errors.forEach(error => alert(error));
+      errors.forEach((error) => alert(error));
       return;
     }
     if (!isCpfCnpjUnique(newClient.cpf_cnpj)) {
@@ -87,7 +88,7 @@ export function ClientsPage() {
       return;
     }
     setClients([...clients, { ...newClient, id: Date.now(), isActive: true }]);
-    setNewClient({ name: '', cpf_cnpj: '', contact: '', address: '' });
+    setNewClient({ name: "", cpf_cnpj: "", contact: "", address: "" });
   };
 
   const handleEditClient = (client: Client) => {
@@ -96,21 +97,23 @@ export function ClientsPage() {
   };
 
   const handleUpdateClient = () => {
-  if (editingClient) {
-    const errors = validateClient(editingClient);
-    if (errors.length > 0) {
-      errors.forEach(error => alert(error));
-      return;
+    if (editingClient) {
+      const errors = validateClient(editingClient);
+      if (errors.length > 0) {
+        errors.forEach((error) => alert(error));
+        return;
+      }
+      if (!isCpfCnpjUnique(editingClient.cpf_cnpj, editingClient.id)) {
+        alert("CPF/CNPJ já está em uso por outro cliente.");
+        return;
+      }
+      setClients(
+        clients.map((c) => (c.id === editingClient.id ? editingClient : c))
+      );
+      setEditingClient(null);
+      setIsEditDialogOpen(false);
     }
-    if (!isCpfCnpjUnique(editingClient.cpf_cnpj, editingClient.id)) {
-      alert("CPF/CNPJ já está em uso por outro cliente.");
-      return;
-    }
-    setClients(clients.map(c => c.id === editingClient.id ? editingClient : c));
-    setEditingClient(null);
-    setIsEditDialogOpen(false);
-  }
-};
+  };
 
   const handleDeleteClient = (id: number) => {
     const clientToDelete = clients.find((c) => c.id === id);
@@ -144,12 +147,12 @@ export function ClientsPage() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
-  <div className="max-w-full mx-auto">
-    <h1 className="text-4xl font-extrabold text-indigo-900 mb-10 text-center">
-      Gerenciamento de Clientes
-    </h1>
+      <div className="max-w-full mx-auto">
+        <h1 className="text-4xl font-extrabold text-indigo-900 mb-10 text-center">
+          Gerenciamento de Clientes
+        </h1>
 
-    <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
             <div className="search-bar">
               <Input
@@ -177,11 +180,14 @@ export function ClientsPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="add-button">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Cliente
-                </Button>
+                <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
+                  <Button className="add-button">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Cliente
+                  </Button>
+                </div>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg rounded-2xl">
                 <DialogHeader>
@@ -413,7 +419,7 @@ export function ClientsPage() {
                 <Label
                   htmlFor="edit-name"
                   className="text-right text-indigo-700"
-                > 
+                >
                   Nome
                 </Label>
                 <Input
@@ -484,12 +490,7 @@ export function ClientsPage() {
               </div>
             </div>
           )}
-          <Button
-            onClick={handleUpdateClient}
-            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-full"
-          >
-            Atualizar Cliente
-          </Button>
+          <Button onClick={handleUpdateClient}>Atualizar Cliente</Button>
         </DialogContent>
       </Dialog>
     </div>

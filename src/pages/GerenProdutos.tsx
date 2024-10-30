@@ -2,7 +2,7 @@ import { useAppContext } from "../AppContext";
 import { useState } from "react";
 import "../index.css";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import '../styles/pageStyles.css'
+import "../styles/pageStyles.css";
 
 import {
   Table,
@@ -29,7 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import '../styles/pageStyles.css';
+import "../styles/pageStyles.css";
 
 interface Product {
   id: number;
@@ -43,7 +43,7 @@ interface Product {
 
 interface Transaction {
   id: number;
-  type: 'entrada' | 'saida';
+  type: "entrada" | "saida";
   date: string;
   productId: number;
   quantity: number;
@@ -65,7 +65,8 @@ export function ProductsPage() {
     }
   };
 
-  const { products, setProducts, suppliers, transactions, setTransactions } = useAppContext();
+  const { products, setProducts, suppliers, transactions, setTransactions } =
+    useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
     name: "",
@@ -92,22 +93,29 @@ export function ProductsPage() {
       alert("A URL da imagem é inválida.");
       return;
     }
-  
+
     const product = { ...newProduct, id: Date.now() };
     setProducts([...products, product]);
-  
+
     const transaction: Transaction = {
       id: Date.now(),
-      type: 'entrada' as const,
-      date: new Date().toISOString().split('T')[0],
+      type: "entrada" as const,
+      date: new Date().toISOString().split("T")[0],
       productId: product.id,
       quantity: product.stock,
       totalValue: product.price * product.stock,
-      description: 'Estoque inicial'
+      description: "Estoque inicial",
     };
-    
+
     setTransactions([...transactions, transaction]);
-    setNewProduct({ name: '', category: '', price: 0, stock: 0, supplier: '', image: '' });
+    setNewProduct({
+      name: "",
+      category: "",
+      price: 0,
+      stock: 0,
+      supplier: "",
+      image: "",
+    });
   };
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
@@ -120,30 +128,35 @@ export function ProductsPage() {
         return;
       }
       if (!isValidQuantity(editingProduct.stock)) {
-        alert("A quantidade deve ser um número inteiro positivo.");
+        alert("A quantidade deve ser um número positivo.");
         return;
       }
       if (!isValidImageUrl(editingProduct.image)) {
         alert("A URL da imagem é inválida.");
         return;
       }
-      setProducts(products.map(p => p.id === editingProduct.id ? editingProduct : p));
+      setProducts(
+        products.map((p) => (p.id === editingProduct.id ? editingProduct : p))
+      );
       setEditingProduct(null);
     }
- 
+
     if (editingProduct) {
-      const originalProduct = products.find(p => p.id === editingProduct.id);
-      const stockDifference = editingProduct.stock - (originalProduct?.stock || 0);
-      
+      const originalProduct = products.find((p) => p.id === editingProduct.id);
+      const stockDifference =
+        editingProduct.stock - (originalProduct?.stock || 0);
+
       if (stockDifference !== 0) {
         handleProductTransaction(
           editingProduct,
           Math.abs(stockDifference),
-          stockDifference > 0 ? 'entrada' : 'saida'
+          stockDifference > 0 ? "entrada" : "saida"
         );
       }
-      
-      setProducts(products.map(p => p.id === editingProduct.id ? editingProduct : p));
+
+      setProducts(
+        products.map((p) => (p.id === editingProduct.id ? editingProduct : p))
+      );
       setEditingProduct(null);
     }
   };
@@ -166,25 +179,26 @@ export function ProductsPage() {
 
   return (
     <div className="page-container">
-    <div className="page-content">
-      <h1 className="page-title">Gerenciamento de Produtos</h1>
+      <div className="page-content">
+        <h1 className="page-title">Gerenciamento de Produtos</h1>
 
-      <div className="content-card">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
-          <div className="search-bar">
-            <Input 
-              placeholder="Buscar produtos..." 
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Button size="icon" variant="outline" className="search-button">
-              <Search className="h-6 w-6" />
-            </Button>
-          </div>
+        <div className="content-card">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
+            <div className="search-bar">
+              <Input
+                placeholder="Buscar produtos..."
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Button size="icon" variant="outline" className="search-button">
+                <Search className="h-6 w-6" />
+              </Button>
+            </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="action-button">
                   Filtrar por {filterType === "name" ? "Nome" : "Fornecedor"}
                 </Button>
               </DropdownMenuTrigger>
@@ -199,6 +213,7 @@ export function ProductsPage() {
             </DropdownMenu>
             <Button
               onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              className="action-button"
             >
               Ordenar por Preço{" "}
               {sortOrder === "asc" ? (
@@ -348,9 +363,9 @@ export function ProductsPage() {
             </Dialog>
           </div>
 
-          <div className="overflow-x-auto rounded-xl shadow-md">
+          <div className="table-container">
             <Table>
-              <TableHeader className="bg-indigo-100">
+              <TableHeader className="table-header">
                 <TableRow>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-indigo-800 uppercase tracking-wider">
                     Image
@@ -380,10 +395,7 @@ export function ProductsPage() {
               </TableHeader>
               <TableBody>
                 {filteredAndSortedProducts.map((product) => (
-                  <TableRow
-                    key={product.id}
-                    className="hover:bg-indigo-50 transition-colors duration-200"
-                  >
+                  <TableRow key={product.id} className="table-row">
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <img
                         src={product.image}
@@ -415,7 +427,7 @@ export function ProductsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditProduct(product)}
-                          className="text-indigo-600 hover:text-indigo-800 rounded-full"
+                          className="edit-button"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -423,7 +435,7 @@ export function ProductsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteProduct(product.id)}
-                          className="text-red-600 hover:text-red-800 rounded-full"
+                          className="delete-button"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -575,7 +587,6 @@ export function ProductsPage() {
             </div>
             <Button
               onClick={handleUpdateProduct}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-full"
             >
               Atualizar Produto
             </Button>
@@ -587,7 +598,18 @@ export function ProductsPage() {
 }
 
 export default ProductsPage;
-function handleProductTransaction(product: { id: number; name: string; category: string; price: number; stock: number; supplier: string; image: string; }, stock: number, arg2: string) {
+function handleProductTransaction(
+  product: {
+    id: number;
+    name: string;
+    category: string;
+    price: number;
+    stock: number;
+    supplier: string;
+    image: string;
+  },
+  stock: number,
+  arg2: string
+) {
   throw new Error("Function not implemented.");
 }
-
