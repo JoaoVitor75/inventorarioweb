@@ -410,11 +410,3 @@ export function SuppliersPage() {
 
 export default SuppliersPage;
 
-<div className="mb-4">
-  <Link to="/products" className="text-indigo-600 hover:text-indigo-800 mr-4">
-    Gerenciar Produtos
-  </Link>
-  <Link to="/" className="text-indigo-600 hover:text-indigo-800">
-    Voltar para Home
-  </Link>
-</div>;

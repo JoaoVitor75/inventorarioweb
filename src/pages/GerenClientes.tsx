@@ -149,7 +149,7 @@ export function ClientsPage() {
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-full mx-auto">
         <h1 className="text-4xl font-extrabold text-indigo-900 mb-10 text-center">
-          Gerenciamento de Clientes
+         Clientes
         </h1>
 
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">

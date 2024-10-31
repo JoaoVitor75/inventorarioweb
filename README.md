@@ -1,71 +1,50 @@
-# Inventory Web System
+# React + TypeScript + Vite
 
-A modern web-based inventory management system built with Next.js and TypeScript, designed to help businesses manage their products, orders, clients, and suppliers efficiently.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Features
+Currently, two official plugins are available:
 
-### Product Management
-- Track product inventory
-- Manage product details (name, category, price, stock)
-- Upload product images
-- Monitor stock levels
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### Client Management
-- Store client information
-- Track client orders
-- Manage client status
-- Store contact details and addresses
+## Expanding the ESLint configuration
 
-### Supplier Management
-- Maintain supplier database
-- Track supplier products
-- Store supplier contact information
-- Manage supplier relationships
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-### Order Processing
-- Create and manage orders
-- Track order status
-- Calculate order totals
-- Link orders to clients
+- Configure the top-level `parserOptions` property like this:
 
-### Financial Transactions
-- Track incoming and outgoing transactions
-- Monitor product movements
-- Generate financial reports
-- Link transactions to orders
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
+```
 
-## Technical Stack
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-- Next.js
-- TypeScript
-- React Context for state management
-- Shadcn UI components
-- Modern UI/UX design
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-## Data Structure
-
-The system manages the following key entities:
-
-- Products (id, name, category, price, stock, supplier, image)
-- Clients (id, name, cpf_cnpj, contact, address, isActive)
-- Suppliers (id, name, cnpj, contact, address)
-- Orders (id, clientId, date, status, total)
-- Transactions (id, type, date, productId, quantity, totalValue, orderId, description)
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies:
-```bash
-npm install
-
-Run the development server:
-npm run dev
-
-Contributing
-This project welcomes contributions. Please feel free to submit pull requests or open issues for any improvements.
-
-License
-MIT License
-
-This README provides a clear overview of the project's features, technical stack, and data structure while maintaining a professional tone and including all the key information from the provided codebase context.
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
+```

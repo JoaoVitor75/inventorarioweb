@@ -112,12 +112,10 @@ export function OrdersPage() {
   const updateProductQuantity = (productId: number, quantity: number) => {
     const product = products.find((p) => p.id === productId);
     if (product && quantity > product.stock) {
-      // If quantity exceeds stock, set it to max available stock
       setSelectedProductQuantities((prev) => ({
         ...prev,
         [productId]: product.stock,
       }));
-      // You can add a toast/alert here to inform the user
     } else {
       setSelectedProductQuantities((prev) => ({
         ...prev,
