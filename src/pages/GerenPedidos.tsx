@@ -289,7 +289,7 @@ export function OrdersPage() {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1 className="page-title">Gerenciamento de Pedidos</h1>
+        <h1 className="page-title">Pedidos</h1>
 
         <div className="content-card">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">

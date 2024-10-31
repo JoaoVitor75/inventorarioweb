@@ -9,7 +9,6 @@ export default function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Since this is a placeholder, we'll just navigate to the main page
     navigate("/products");
   };
 

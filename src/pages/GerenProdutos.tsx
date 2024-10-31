@@ -184,7 +184,7 @@ export function ProductsPage() {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1 className="page-title">Gerenciamento de Produtos</h1>
+        <h1 className="page-title">Produtos</h1>
 
         <div className="content-card">
           <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
