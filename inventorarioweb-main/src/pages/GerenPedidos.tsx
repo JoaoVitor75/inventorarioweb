@@ -72,6 +72,7 @@ export function OrdersPage() {
     transactions,
     setTransactions,
   } = useAppContext();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [filterStatus, setFilterStatus] = useState<Order["status"] | "all">(
@@ -109,10 +110,20 @@ export function OrdersPage() {
   };
 
   const updateProductQuantity = (productId: number, quantity: number) => {
-    setSelectedProductQuantities((prev) => ({
-      ...prev,
-      [productId]: quantity,
-    }));
+    const product = products.find((p) => p.id === productId);
+    if (product && quantity > product.stock) {
+      // If quantity exceeds stock, set it to max available stock
+      setSelectedProductQuantities((prev) => ({
+        ...prev,
+        [productId]: product.stock,
+      }));
+      // You can add a toast/alert here to inform the user
+    } else {
+      setSelectedProductQuantities((prev) => ({
+        ...prev,
+        [productId]: quantity,
+      }));
+    }
   };
 
   const addSelectedProductsToOrder = () => {
@@ -146,6 +157,54 @@ export function OrdersPage() {
       total,
     };
 
+    {
+      products.map((product) => (
+        <div key={product.id} className="flex items-center space-x-2 my-1">
+          <input
+            type="checkbox"
+            id={`product-${product.id}`}
+            checked={selectedProducts.includes(product.id)}
+            onChange={() => toggleProductSelection(product.id)}
+          />
+          <label htmlFor={`product-${product.id}`}>{product.name}</label>
+          {selectedProducts.includes(product.id) && (
+            <div className="flex items-center space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  updateProductQuantity(
+                    product.id,
+                    (selectedProductQuantities[product.id] || 1) - 1
+                  )
+                }
+                disabled={(selectedProductQuantities[product.id] || 1) <= 1}
+              >
+                -
+              </Button>
+              <span className="w-8 text-center">
+                {selectedProductQuantities[product.id] || 1}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  updateProductQuantity(
+                    product.id,
+                    (selectedProductQuantities[product.id] || 1) + 1
+                  )
+                }
+                disabled={
+                  (selectedProductQuantities[product.id] || 1) >=
+                  (products.find((p) => p.id === product.id)?.stock || 0)
+                }
+              >
+                +
+              </Button>
+            </div>
+          )}
+        </div>
+      ));    }
     const newTransactions = currentOrderItems.map((item) => ({
       id: Date.now() + item.productId,
       type: "saida" as const,
@@ -257,7 +316,7 @@ export function OrdersPage() {
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              
+
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="pending">Pendente</SelectItem>
@@ -332,23 +391,51 @@ export function OrdersPage() {
                           {product.name}
                         </label>
                         {selectedProducts.includes(product.id) && (
-                          <Input
-                            type="number"
-                            min="1"
-                            value={selectedProductQuantities[product.id] || 1}
-                            onChange={(e) =>
-                              updateProductQuantity(
-                                product.id,
-                                parseInt(e.target.value) || 1
-                              )
-                            }
-                            className="w-20 ml-2"
-                          />
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                updateProductQuantity(
+                                  product.id,
+                                  (selectedProductQuantities[product.id] || 1) -
+                                    1
+                                )
+                              }
+                              disabled={
+                                (selectedProductQuantities[product.id] || 1) <=
+                                1
+                              }
+                            >
+                              -
+                            </Button>
+                            <span className="w-8 text-center">
+                              {selectedProductQuantities[product.id] || 1}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                updateProductQuantity(
+                                  product.id,
+                                  (selectedProductQuantities[product.id] || 1) +
+                                    1
+                                )
+                              }
+                              disabled={
+                                (selectedProductQuantities[product.id] || 1) >=
+                                (products.find((p) => p.id === product.id)
+                                  ?.stock || 0)
+                              }
+                            >
+                              +
+                            </Button>
+                          </div>
                         )}
                       </div>
-                    ))}
-                  </div>
+                    ))}                  </div>
                 </div>
+
                 <Button onClick={addSelectedProductsToOrder}>
                   Adicionar Produtos Selecionados
                 </Button>

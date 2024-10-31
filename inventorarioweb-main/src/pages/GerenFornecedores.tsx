@@ -53,7 +53,8 @@ export function SuppliersPage() {
   const isValidName = (name: string) => name.trim() !== "";
 
   const isValidCnpj = (cnpj: string) => {
-    return cnpj.trim() !== "";
+    const numericCnpj = cnpj.replace(/\D/g, ''); // Remove non-digits
+    return numericCnpj.length === 14;
   };
 
   const isValidContact = (contact: string) => contact.trim() !== "";
@@ -101,6 +102,17 @@ export function SuppliersPage() {
     setSuppliers(suppliers.filter((s) => s.id !== id));
   };
 
+  <Input
+    id="cnpj"
+    className="col-span-3 rounded-lg"
+    value={newSupplier.cnpj}
+    maxLength={14}
+    pattern="\d{14}"
+    onChange={(e) => {
+      const numericValue = e.target.value.replace(/\D/g, '');
+      setNewSupplier({ ...newSupplier, cnpj: numericValue });
+    }}
+  />
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
       supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -388,12 +400,7 @@ export function SuppliersPage() {
                 />
               </div>
             </div>
-            <Button
-              onClick={handleUpdateSupplier}
-              
-            >
-              Atualizar Fornecedor
-            </Button>
+            <Button onClick={handleUpdateSupplier}>Atualizar Fornecedor</Button>
           </DialogContent>
         </Dialog>
       )}

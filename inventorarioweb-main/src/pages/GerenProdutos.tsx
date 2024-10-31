@@ -81,6 +81,10 @@ export function ProductsPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const handleAddProduct = () => {
+    if (!newProduct.supplier) {
+      alert("Por favor, selecione um fornecedor.");
+      return;
+    }
     if (!isValidPrice(newProduct.price)) {
       alert("O preço deve ser maior que zero.");
       return;
@@ -128,7 +132,7 @@ export function ProductsPage() {
         return;
       }
       if (!isValidQuantity(editingProduct.stock)) {
-        alert("A quantidade deve ser um número inteiro positivo.");
+        alert("A quantidade deve ser um número positivo.");
         return;
       }
       if (!isValidImageUrl(editingProduct.image)) {
@@ -585,12 +589,7 @@ export function ProductsPage() {
                 </select>
               </div>{" "}
             </div>
-            <Button
-              onClick={handleUpdateProduct}
-              
-            >
-              Atualizar Produto
-            </Button>
+            <Button onClick={handleUpdateProduct}>Atualizar Produto</Button>
           </DialogContent>
         </Dialog>
       )}

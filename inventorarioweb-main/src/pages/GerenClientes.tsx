@@ -341,14 +341,22 @@ export function ClientsPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table>''
           </div>
         </div>
         {selectedClient && (
-          <div className="content-card">
+          <div className="content-card relative">
+            <Button
+              variant="outline"
+              onClick={() => setSelectedClient(null)}
+              className="absolute top-4 right-4 text-indigo-700"
+            >
+              Fechar
+            </Button>
             <h2 className="text-2xl font-bold text-indigo-900 mb-4">
               Histórico de Pedidos - {selectedClient.name}
             </h2>
+
             <div className="mb-4">
               <Label htmlFor="orderStatus" className="mr-2">
                 Filtrar por status:
@@ -490,12 +498,7 @@ export function ClientsPage() {
               </div>
             </div>
           )}
-          <Button
-            onClick={handleUpdateClient}
-            
-          >
-            Atualizar Cliente
-          </Button>
+          <Button onClick={handleUpdateClient}>Atualizar Cliente</Button>
         </DialogContent>
       </Dialog>
     </div>
