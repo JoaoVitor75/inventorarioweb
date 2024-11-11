@@ -2,7 +2,16 @@ import React, { useState } from "react";
 import { useAppContext } from "../AppContext";
 import "../styles/pageStyles.css";
 import { format } from "date-fns";
-import {Table,TableBody,TableCell, TableHead,TableHeader,TableRow,} from "@/components/ui/table";
+
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Search,Edit,Trash2,ChevronUp,ChevronDown, Eye,} from "lucide-react";
@@ -25,16 +34,6 @@ interface Order {
   total: number;
 }
 
-interface Transaction {
-  id: number;
-  type: "entrada" | "saida";
-  date: string;
-  productId: number;
-  quantity: number;
-  totalValue: number;
-  orderId?: number;
-  description: string;
-}
 
 export function OrdersPage() {
   const {
@@ -42,9 +41,11 @@ export function OrdersPage() {
     setOrders,
     clients,
     products,
+    setProducts,
     transactions,
     setTransactions,
   } = useAppContext();
+  
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -187,6 +188,19 @@ export function OrdersPage() {
       description: `Pedido #${orderId}`,
     }));
 
+    // Update product stock levels
+    const updatedProducts = products.map(product => {
+      const orderItem = currentOrderItems.find(item => item.productId === product.id);
+      if (orderItem) {
+        return {
+          ...product,
+          stock: product.stock - orderItem.quantity
+        };
+      }
+      return product;
+    });
+
+    setProducts(updatedProducts);
     setTransactions([...transactions, ...newTransactions]);
     setOrders([...orders, newOrderWithItems]);
     setNewOrder({

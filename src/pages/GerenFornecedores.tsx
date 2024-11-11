@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "../index.css";
 import "../styles/PageStyles.css";
+import {Supplier} from "@/@types/ISupplier"
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
