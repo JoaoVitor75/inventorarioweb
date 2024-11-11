@@ -1,35 +1,17 @@
 import { useAppContext } from "../AppContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "../index.css";
 import "../styles/PageStyles.css";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Search, Edit, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Supplier {
   id: number;
@@ -38,6 +20,7 @@ interface Supplier {
   contact: string;
   address: string;
 }
+
 export function SuppliersPage() {
   const { suppliers, setSuppliers } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,6 +33,34 @@ export function SuppliersPage() {
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [filterType, setFilterType] = useState<"name" | "contact">("name");
+  
+  const [loading, setLoading] = useState(true); // Para exibir o estado de carregamento
+  const [error, setError] = useState<string | null>(null);
+
+  // Função para carregar fornecedores do backend
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/fornecedores");
+        if (!response.ok) {
+          throw new Error("Erro ao carregar fornecedores");
+        }
+        const data = await response.json();
+        setSuppliers(data); // Atualiza o estado com os fornecedores
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred");
+        }
+      } finally {
+        setLoading(false); // Desativa o estado de carregamento
+      }
+    };
+
+    fetchSuppliers();
+  }, [setSuppliers]);
+
   const isValidName = (name: string) => name.trim() !== "";
 
   const isValidCnpj = (cnpj: string) => {
@@ -63,7 +74,14 @@ export function SuppliersPage() {
     return !suppliers.some((s) => s.cnpj === cnpj && s.id !== currentId);
   };
 
-  const handleAddSupplier = () => {
+  const handleSupplierTransaction = (
+    supplier: Supplier,
+    type: "entrada" | "saida"
+  ) => {
+    console.log(`Transação de ${type} realizada para o fornecedor ${supplier.name}.`);
+  }
+
+  const handleAddSupplier = async () => {
     if (!isValidName(newSupplier.name)) {
       alert("Nome é obrigatório.");
       return;
@@ -80,9 +98,33 @@ export function SuppliersPage() {
       alert("Contato é obrigatório.");
       return;
     }
-    setSuppliers([...suppliers, { ...newSupplier, id: Date.now() }]);
-    setNewSupplier({ name: "", cnpj: "", contact: "", address: "" });
+
+    // Chama o endpoint do backend para adicionar o fornecedor
+    try {
+      const response = await fetch("http://localhost:3000/fornecedor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSupplier),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.message); // Exibe a mensagem de erro se houver
+        return;
+      }
+
+      const addedSupplier = await response.json();
+      setSuppliers([...suppliers, addedSupplier]);
+      handleSupplierTransaction(addedSupplier, "entrada"); // Registro da transação
+      setNewSupplier({ name: "", cnpj: "", contact: "", address: "" });
+    } catch (error) {
+      console.error("Erro ao adicionar fornecedor:", error);
+      alert("Ocorreu um erro ao adicionar o fornecedor.");
+    }
   };
+
   const handleEditSupplier = (supplier: Supplier) => {
     setEditingSupplier(supplier);
   };
@@ -94,38 +136,44 @@ export function SuppliersPage() {
           s.id === editingSupplier.id ? editingSupplier : s
         )
       );
+      handleSupplierTransaction(editingSupplier, "entrada");
       setEditingSupplier(null);
     }
   };
 
   const handleDeleteSupplier = (id: number) => {
-    setSuppliers(suppliers.filter((s) => s.id !== id));
+    const supplierToDelete = suppliers.find((s) => s.id === id);
+    if (supplierToDelete) {
+      setSuppliers(suppliers.filter((s) => s.id !== id));
+      handleSupplierTransaction(supplierToDelete, "saida");
+    }
   };
 
-  <Input
-    id="cnpj"
-    className="col-span-3 rounded-lg"
-    value={newSupplier.cnpj}
-    maxLength={14}
-    pattern="\d{14}"
-    onChange={(e) => {
-      const numericValue = e.target.value.replace(/\D/g, '');
-      setNewSupplier({ ...newSupplier, cnpj: numericValue });
-    }}
-  />
-  const filteredSuppliers = suppliers.filter(
-    (supplier) =>
-      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.contact.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredSuppliers = suppliers.filter((supplier) => {
+    // Verifique se 'name' e 'contact' são definidos e faça o toLowerCase com segurança
+    const nameMatches = supplier.name && supplier.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const contactMatches = supplier.contact && supplier.contact.toLowerCase().includes(searchTerm.toLowerCase());
+    return nameMatches || contactMatches;
+  });
+  
   const sortedAndFilteredSuppliers = filteredSuppliers.sort((a, b) => {
     if (sortOrder === "asc") {
-      return a[filterType].localeCompare(b[filterType]);
+      // Verifique se filterType é uma chave válida antes de tentar usar localeCompare
+      if (a[filterType] && b[filterType]) {
+        return a[filterType].localeCompare(b[filterType]);
+      }
+      return 0; // Caso o valor seja inválido
     } else {
-      return b[filterType].localeCompare(a[filterType]);
+      if (a[filterType] && b[filterType]) {
+        return b[filterType].localeCompare(a[filterType]);
+      }
+      return 0; // Caso o valor seja inválido
     }
   });
+
+  // Renderização da tabela e a exibição dos fornecedores
+  if (loading) return <div>Carregando fornecedores...</div>;
+  if (error) return <div>Erro: {error}</div>;
 
   return (
     <div className="page-container">
@@ -178,235 +226,84 @@ export function SuppliersPage() {
                   <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Fornecedor
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-lg rounded-2xl">
+              <DialogContent>
                 <DialogHeader>
-                  <DialogTitle className="text-2xl font-semibold text-indigo-900">
-                    Adicionar Novo Fornecedor
-                  </DialogTitle>
+                  <DialogTitle>Adicionar Fornecedor</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label
-                      htmlFor="name"
-                      className="text-right text-indigo-700"
-                    >
-                      Nome
-                    </Label>
-                    <Input
-                      id="name"
-                      className="col-span-3 rounded-lg"
-                      value={newSupplier.name}
-                      onChange={(e) =>
-                        setNewSupplier({ ...newSupplier, name: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label
-                      htmlFor="contact"
-                      className="text-right text-indigo-700"
-                    >
-                      Contato
-                    </Label>
-                    <Input
-                      id="contact"
-                      className="col-span-3 rounded-lg"
-                      value={newSupplier.contact}
-                      onChange={(e) =>
-                        setNewSupplier({
-                          ...newSupplier,
-                          contact: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label
-                      htmlFor="cnpj"
-                      className="text-right text-indigo-700"
-                    >
-                      CNPJ
-                    </Label>
-                    <Input
-                      id="cnpj"
-                      className="col-span-3 rounded-lg"
-                      value={newSupplier.cnpj}
-                      onChange={(e) =>
-                        setNewSupplier({ ...newSupplier, cnpj: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label
-                      htmlFor="address"
-                      className="text-right text-indigo-700"
-                    >
-                      Endereço
-                    </Label>
-                    <Input
-                      id="address"
-                      className="col-span-3 rounded-lg"
-                      value={newSupplier.address}
-                      onChange={(e) =>
-                        setNewSupplier({
-                          ...newSupplier,
-                          address: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
+                <div>
+                  <Label>Nome</Label>
+                  <Input
+                    value={newSupplier.name}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, name: e.target.value })
+                    }
+                  />
+                  <Label>CNPJ</Label>
+                  <Input
+                    value={newSupplier.cnpj}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, cnpj: e.target.value })
+                    }
+                  />
+                  <Label>Contato</Label>
+                  <Input
+                    value={newSupplier.contact}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, contact: e.target.value })
+                    }
+                  />
+                  <Label>Endereço</Label>
+                  <Input
+                    value={newSupplier.address}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, address: e.target.value })
+                    }
+                  />
+                  <Button onClick={handleAddSupplier}>Adicionar</Button>
                 </div>
-                <Button
-                  onClick={handleAddSupplier}
-                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full"
-                >
-                  Adicionar Fornecedor
-                </Button>
               </DialogContent>
             </Dialog>
           </div>
 
-          <div className="table-container">
-            <Table>
-              <TableHeader className="table-header">
-                <TableRow>
-                  <TableHead className="w-[100px] px-6 py-3 text-left text-xs font-medium text-indigo-800 uppercase tracking-wider">
-                    ID
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-indigo-800 uppercase tracking-wider">
-                    Nome
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-indigo-800 uppercase tracking-wider">
-                    Contato
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-indigo-800 uppercase tracking-wider">
-                    Endereço
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-indigo-800 uppercase tracking-wider">
-                    Ações
-                  </TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>CNPJ</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedAndFilteredSuppliers.map((supplier) => (
+                <TableRow key={supplier.id}>
+                  <TableCell>{supplier.name}</TableCell>
+                  <TableCell>{supplier.cnpj}</TableCell>
+                  <TableCell>{supplier.contact}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleEditSupplier(supplier)}
+                    >
+                      <Edit className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDeleteSupplier(supplier.id)}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedAndFilteredSuppliers.map((supplier) => (
-                  <TableRow key={supplier.id} className="table-row">
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-900">
-                      {supplier.id}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700">
-                      {supplier.name}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700">
-                      {supplier.contact}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700">
-                      {supplier.address}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700 text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditSupplier(supplier)}
-                          className="edit-button"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteSupplier(supplier.id)}
-                          className="delete-button"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
-
-      {editingSupplier && (
-        <Dialog
-          open={!!editingSupplier}
-          onOpenChange={() => setEditingSupplier(null)}
-        >
-          <DialogContent className="sm:max-w-lg rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-semibold text-indigo-900">
-                Editar Fornecedor
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label
-                  htmlFor="edit-name"
-                  className="text-right text-indigo-700"
-                >
-                  Nome
-                </Label>
-                <Input
-                  id="edit-name"
-                  className="col-span-3 rounded-lg"
-                  value={editingSupplier.name}
-                  onChange={(e) =>
-                    setEditingSupplier({
-                      ...editingSupplier,
-                      name: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label
-                  htmlFor="edit-contact"
-                  className="text-right text-indigo-700"
-                >
-                  Contato
-                </Label>
-                <Input
-                  id="edit-contact"
-                  className="col-span-3 rounded-lg"
-                  value={editingSupplier.contact}
-                  onChange={(e) =>
-                    setEditingSupplier({
-                      ...editingSupplier,
-                      contact: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label
-                  htmlFor="edit-address"
-                  className="text-right text-indigo-700"
-                >
-                  Endereço
-                </Label>
-                <Input
-                  id="edit-address"
-                  className="col-span-3 rounded-lg"
-                  value={editingSupplier.address}
-                  onChange={(e) =>
-                    setEditingSupplier({
-                      ...editingSupplier,
-                      address: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <Button onClick={handleUpdateSupplier}>Atualizar Fornecedor</Button>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
+
 
 export default SuppliersPage;
 

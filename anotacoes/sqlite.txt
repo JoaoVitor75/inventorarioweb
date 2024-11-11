@@ -1,0 +1,22 @@
+rodar - npm install sqlite3
+
+executar comando  -  node database_setup.js
+
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./meu_banco.db');
+
+//Exemplo de inserção de um produto
+db.run(`INSERT INTO Produto (nome, descricao, preco, quantidade, imagem, fornecedorId)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+        ['Produto 1', 'Descrição do Produto 1', 10.5, 100, 'url_da_imagem', 1],
+        function(err) {
+          if (err) {
+            console.error("Erro ao inserir produto", err.message);
+          } else {
+            console.log("Produto inserido com sucesso!");
+          }
+        });
+
+// Fecha a conexão
+db.close();
+

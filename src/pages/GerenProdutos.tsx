@@ -4,30 +4,14 @@ import "../index.css";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "../styles/pageStyles.css";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow,} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Search, Edit, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent,DialogHeader,DialogTitle,DialogTrigger,} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,
+DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import "../styles/pageStyles.css";
 
@@ -80,7 +64,7 @@ export function ProductsPage() {
   const [filterType, setFilterType] = useState<"name" | "supplier">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!newProduct.supplier) {
       alert("Por favor, selecione um fornecedor.");
       return;
@@ -97,30 +81,57 @@ export function ProductsPage() {
       alert("A URL da imagem é inválida.");
       return;
     }
-
-    const product = { ...newProduct, id: Date.now() };
-    setProducts([...products, product]);
-
-    const transaction: Transaction = {
-      id: Date.now(),
-      type: "entrada" as const,
-      date: new Date().toISOString().split("T")[0],
-      productId: product.id,
-      quantity: product.stock,
-      totalValue: product.price * product.stock,
-      description: "Estoque inicial",
-    };
-
-    setTransactions([...transactions, transaction]);
-    setNewProduct({
-      name: "",
-      category: "",
-      price: 0,
-      stock: 0,
-      supplier: "",
-      image: "",
-    });
+  
+    try {
+      // Monta o objeto do produto
+      const product = { ...newProduct, id: Date.now() };
+  
+      // Envia a requisição POST
+      const response = await fetch('http://localhost:3000/produto', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(product),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Erro ao adicionar produto');
+      }
+  
+      const createdProduct = await response.json();
+  
+      // Atualiza a lista de produtos com a resposta do servidor
+      setProducts([...products, createdProduct]);
+  
+      // Registra a transação
+      const transaction: Transaction = {
+        id: Date.now(),
+        type: "entrada" as const,
+        date: new Date().toISOString().split("T")[0],
+        productId: createdProduct.id,
+        quantity: createdProduct.stock,
+        totalValue: createdProduct.price * createdProduct.stock,
+        description: "Estoque inicial",
+      };
+  
+      setTransactions([...transactions, transaction]);
+      setNewProduct({
+        name: "",
+        category: "",
+        price: 0,
+        stock: 0,
+        supplier: "",
+        image: "",
+      });
+  
+      alert('Produto adicionado com sucesso!');
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao adicionar produto.');
+    }
   };
+  
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
   };

@@ -2,40 +2,13 @@ import React, { useState } from "react";
 import { useAppContext } from "../AppContext";
 import "../styles/pageStyles.css";
 import { format } from "date-fns";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import {Table,TableBody,TableCell, TableHead,TableHeader,TableRow,} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  PlusCircle,
-  Search,
-  Edit,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
-  Eye,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { PlusCircle, Search,Edit,Trash2,ChevronUp,ChevronDown, Eye,} from "lucide-react";
+import {Dialog, DialogContent,DialogHeader,DialogTitle, DialogTrigger,} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from "@/components/ui/select";
 
 interface OrderItem {
   productId: number;
