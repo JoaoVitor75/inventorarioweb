@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useAppContext } from "../AppContext";
 import "../styles/pageStyles.css";
-import { Link } from "react-router-dom";
+import {Client} from "@/@types/IClient"
+//import {Order} from "@/@types/IOrder"
 
 import "../index.css";
 
@@ -31,22 +32,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface Client {
-  id: number;
-  name: string;
-  cpf_cnpj: string;
-  contact: string;
-  address: string;
-  isActive: boolean;
-}
-
-interface Order {
-  id: number;
-  clientId: number;
-  date: string;
-  status: string;
-  total: number;
-}
 
 export function ClientsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -72,7 +57,14 @@ export function ClientsPage() {
   const validateClient = (client: Partial<Client>) => {
     const errors: string[] = [];
     if (!client.name) errors.push("Nome é obrigatório.");
-    if (!client.cpf_cnpj) errors.push("CPF/CNPJ é obrigatório.");
+    if (!client.cpf_cnpj) {
+      errors.push("CNPJ é obrigatório.");
+    } else {
+      const numericCpfCnpj = client.cpf_cnpj.replace(/\D/g, "");
+      if (numericCpfCnpj.length !== 14) {
+        errors.push("CNPJ deve ter 14 dígitos.");
+      }
+    }
     if (!client.contact) errors.push("Contato é obrigatório.");
     return errors;
   };
@@ -84,7 +76,7 @@ export function ClientsPage() {
       return;
     }
     if (!isCpfCnpjUnique(newClient.cpf_cnpj)) {
-      alert("CPF/CNPJ já está em uso por outro cliente.");
+      alert("CNPJ já está em uso por outro cliente.");
       return;
     }
     setClients([...clients, { ...newClient, id: Date.now(), isActive: true }]);
@@ -104,7 +96,7 @@ export function ClientsPage() {
         return;
       }
       if (!isCpfCnpjUnique(editingClient.cpf_cnpj, editingClient.id)) {
-        alert("CPF/CNPJ já está em uso por outro cliente.");
+        alert("CNPJ já está em uso por outro cliente.");
         return;
       }
       setClients(
@@ -149,7 +141,7 @@ export function ClientsPage() {
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-full mx-auto">
         <h1 className="text-4xl font-extrabold text-indigo-900 mb-10 text-center">
-         Clientes
+          Clientes
         </h1>
 
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
@@ -168,7 +160,7 @@ export function ClientsPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
-                  Filtrar por {filterType === "name" ? "Nome" : "CPF/CNPJ"}
+                  Filtrar por {filterType === "name" ? "Nome" : "CNPJ"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -176,7 +168,7 @@ export function ClientsPage() {
                   Nome
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFilterType("cpf_cnpj")}>
-                  CPF/CNPJ
+                  CNPJ
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -217,15 +209,18 @@ export function ClientsPage() {
                       htmlFor="cpf_cnpj"
                       className="text-right text-indigo-700"
                     >
-                      CPF/CNPJ
+                      CNPJ
                     </Label>
                     <Input
                       id="cpf_cnpj"
                       className="col-span-3 rounded-lg"
                       value={newClient.cpf_cnpj}
-                      onChange={(e) =>
-                        setNewClient({ ...newClient, cpf_cnpj: e.target.value })
-                      }
+                      maxLength={14}
+                      pattern="\d{14}"
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\D/g, "");
+                        setNewClient({ ...newClient, cpf_cnpj: numericValue });
+                      }}
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -276,7 +271,7 @@ export function ClientsPage() {
                     Nome
                   </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-indigo-800 uppercase tracking-wider">
-                    CPF/CNPJ
+                    CNPJ
                   </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-indigo-800 uppercase tracking-wider">
                     Contato
@@ -341,7 +336,7 @@ export function ClientsPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>''
+            </Table>
           </div>
         </div>
         {selectedClient && (
@@ -450,12 +445,15 @@ export function ClientsPage() {
                   id="edit-cpf_cnpj"
                   className="col-span-3 rounded-lg"
                   value={editingClient.cpf_cnpj}
-                  onChange={(e) =>
+                  maxLength={14}
+                  pattern="\d{14}"
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, "");
                     setEditingClient({
                       ...editingClient,
-                      cpf_cnpj: e.target.value,
-                    })
-                  }
+                      cpf_cnpj: numericValue,
+                    });
+                  }}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "../index.css";
 import "../styles/PageStyles.css";
+import {Supplier} from "@/@types/ISupplier"
 
 import {
   Table,
@@ -31,13 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface Supplier {
-  id: number;
-  name: string;
-  cnpj: string;
-  contact: string;
-  address: string;
-}
+
 export function SuppliersPage() {
   const { suppliers, setSuppliers } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
