@@ -76,74 +76,69 @@ interface Supplier {
       fetchSuppliers();
     }, []);
 
-    const isValidName = (name: string) => name.trim() !== "";
+  const isValidName = (name: string) => name.trim() !== "";
 
-    const isValidCnpj = (cnpj: string) => {
-      const numericCnpj = cnpj.replace(/\D/g, ''); // Remove non-digits
-      return numericCnpj.length === 14;
-    };
-  
-    const isValidContact = (contact: string) => contact.trim() !== "";
-  
-    const isCnpjUnique = (cnpj: string, currentId?: number) => {
-      return !suppliers.some((s) => s.cnpj === cnpj && s.id !== currentId);
-    };
-  
-    const handleSupplierTransaction = (
-      supplier: Supplier,
-      type: "entrada" | "saida"
-    ) => {
-      console.log(`Transação de ${type} realizada para o fornecedor ${supplier.nome}.`);
+  const isValidCnpj = (cnpj: string) => {
+    const numericCnpj = cnpj.replace(/\D/g, ''); // Remove non-digits
+    return numericCnpj.length === 14;
+  };
+
+  const isValidContact = (contact: string) => contact.trim() !== "";
+
+  const isCnpjUnique = (cnpj: string, currentId?: number) => {
+    return !suppliers.some((s) => s.cnpj === cnpj && s.id !== currentId);
+  };
+
+  const handleSupplierTransaction = (
+    supplier: Supplier,
+    type: "entrada" | "saida"
+  ) => {
+    console.log(`Transação de ${type} realizada para o fornecedor ${supplier.nome}.`);
+  }
+
+  const handleAddSupplier = async () => {
+    if (!isValidName(newSupplier.nome)) {
+      alert("Nome é obrigatório.");
+      return;
+    }
+    if (!isValidCnpj(newSupplier.cnpj)) {
+      alert("CNPJ é obrigatório.");
+      return;
+    }
+    if (!isCnpjUnique(newSupplier.cnpj)) {
+      alert("CNPJ já cadastrado.");
+      return;
+    }
+    if (!isValidContact(newSupplier.contato)) {
+      alert("Contato é obrigatório.");
+      return;
     }
 
-    const handleAddSupplier = async () => {
-      if (!isValidName(newSupplier.nome)) {
-        alert("Nome é obrigatório.");
+    // Chama o endpoint do backend para adicionar o fornecedor
+    try {
+      const response = await fetch("http://localhost:3000/fornecedor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSupplier),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.message); // Exibe a mensagem de erro se houver
         return;
       }
-      if (!isValidCnpj(newSupplier.cnpj)) {
-        alert("CNPJ é obrigatório.");
-        return;
-      }
-      if (!isCnpjUnique(newSupplier.cnpj)) {
-        alert("CNPJ já cadastrado.");
-        return;
-      }
-      if (!isValidContact(newSupplier.contato)) {
-        alert("Contato é obrigatório.");
-        return;
-      }
-    
-      // Chama o endpoint do backend para adicionar o fornecedor
-      try {
-        const response = await fetch("http://localhost:3000/fornecedor", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newSupplier),
-        });
-    
-        if (!response.ok) {
-          const errorData = await response.json();
-          alert(errorData.message); // Exibe a mensagem de erro se houver
-          return;
-        }
-    
-        const addedSupplier = await response.json();
-        setSuppliers([...suppliers, addedSupplier]);
-        handleSupplierTransaction(addedSupplier, "entrada");
-    
-        // Limpa o formulário após adicionar
-        setNewSupplier({ nome: "", cnpj: "", contato: "", endereco: "" });
-    
-        // Recarrega a página
-        window.location.reload();
-      } catch (error) {
-        console.error("Erro ao adicionar fornecedor:", error);
-        alert("Ocorreu um erro ao adicionar o fornecedor.");
-      }
-    };
+
+      const addedSupplier = await response.json();
+      setSuppliers([...suppliers, addedSupplier]);
+      handleSupplierTransaction(addedSupplier, "entrada"); // Registro da transação
+      setNewSupplier({ nome: "", cnpj: "", contato: "", endereco: "" });
+    } catch (error) {
+      console.error("Erro ao adicionar fornecedor:", error);
+      alert("Ocorreu um erro ao adicionar o fornecedor.");
+    }
+  };
 
   const handleEditSupplier = (supplier: Supplier) => {
     setEditingSupplier(supplier);
@@ -177,11 +172,20 @@ interface Supplier {
   });
   
   const sortedAndFilteredSuppliers = filteredSuppliers.sort((a, b) => {
-    const key = filterType === "name" ? "nome" : "contato"; // Mapeia os valores corretos para "nome" e "contato"
     if (sortOrder === "asc") {
-      return a[key].localeCompare(b[key]);
+      if (filterType === "name" && a.nome && b.nome) {
+        return a.nome.localeCompare(b.nome);
+      } else if (filterType === "contact" && a.contato && b.contato) {
+        return a.contato.localeCompare(b.contato);
+      }
+      return 0;
     } else {
-      return b[key].localeCompare(a[key]);
+      if (filterType === "name" && a.nome && b.nome) {
+        return b.nome.localeCompare(a.nome);
+      } else if (filterType === "contact" && a.contato && b.contato) {
+        return b.contato.localeCompare(a.contato);
+      }
+      return 0;
     }
   });
 

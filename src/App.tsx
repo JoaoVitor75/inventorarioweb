@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import ProductsPage from './pages/GerenProdutos';
-import SuppliersPage from './pages/GerenFornecedores';
+import { SuppliersPage } from './pages/GerenFornecedores';
 import { ClientsPage } from './pages/GerenClientes';
 import OrdersPage from './pages/GerenPedidos';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
@@ -19,10 +19,10 @@ const App = () => {
         <Sidebar />
         </TooltipProvider>
           <Routes>
+            <Route path="/suppliers" element={<SuppliersPage />} />
             <Route path="/Register" element={<Register />} />
             <Route path="/Login" element={<Login />} />
             <Route path="/products" element={<ProductsPage />} />
-            <Route path="/suppliers" element={<SuppliersPage />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/transactions" element={<GerenTransFinan />} />
