@@ -1,5 +1,5 @@
 import { useAppContext } from "../AppContext";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "../index.css";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "../styles/pageStyles.css";
@@ -64,27 +64,6 @@ export function ProductsPage() {
   const [filterType, setFilterType] = useState<"name" | "supplier">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-   // Função para carregar fornecedores do backend
-   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/produtos");
-        if (!response.ok) {
-          throw new Error("Erro ao carregar produtos");
-        }
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setProducts(data);
-        } else {
-          throw new Error("Dados inválidos recebidos do backend");
-        }
-      } catch (err) {
-        console.error("Erro ao carregar produtos:", err);
-      }
-    };
-    fetchProducts();
-  }, []);
-
   const handleAddProduct = async () => {
     if (!newProduct.supplier) {
       alert("Por favor, selecione um fornecedor.");
@@ -145,7 +124,6 @@ export function ProductsPage() {
         supplier: "",
         image: "",
       });
-      window.location.reload();
   
       alert('Produto adicionado com sucesso!');
     } catch (error) {
@@ -158,7 +136,7 @@ export function ProductsPage() {
     setEditingProduct(product);
   };
 
-  const handleUpdateProduct = async () => {
+  const handleUpdateProduct = () => {
     if (editingProduct) {
       if (!isValidPrice(editingProduct.price)) {
         alert("O preço deve ser maior que 0.");
@@ -172,65 +150,34 @@ export function ProductsPage() {
         alert("A URL da imagem é inválida.");
         return;
       }
-  
-      // Enviar a atualização para o backend
-      try {
-        const response = await fetch(`/api/products/${editingProduct.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editingProduct),
-        });
-  
-        if (!response.ok) {
-          throw new Error("Erro ao atualizar o produto");
-        }
-  
-        const updatedProduct = await response.json();
-  
-        // Atualizar o produto na lista localmente
-        setProducts(
-          products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+      setProducts(
+        products.map((p) => (p.id === editingProduct.id ? editingProduct : p))
+      );
+      setEditingProduct(null);
+    }
+
+    if (editingProduct) {
+      const originalProduct = products.find((p) => p.id === editingProduct.id);
+      const stockDifference =
+        editingProduct.stock - (originalProduct?.stock || 0);
+
+      if (stockDifference !== 0) {
+        handleProductTransaction(
+          editingProduct,
+          Math.abs(stockDifference),
+          stockDifference > 0 ? "entrada" : "saida"
         );
-        setEditingProduct(null);
-  
-        // Calcular a diferença no estoque e processar a transação, se necessário
-        const originalProduct = products.find((p) => p.id === editingProduct.id);
-        const stockDifference =
-          editingProduct.stock - (originalProduct?.stock || 0);
-  
-        if (stockDifference !== 0) {
-          handleProductTransaction(
-            editingProduct,
-            Math.abs(stockDifference),
-            stockDifference > 0 ? "entrada" : "saida"
-          );
-        }
-  
-      } catch (error) {
-        console.error("Erro ao atualizar o produto:", error);
-        alert("Erro ao atualizar o produto. Por favor, tente novamente.");
       }
+
+      setProducts(
+        products.map((p) => (p.id === editingProduct.id ? editingProduct : p))
+      );
+      setEditingProduct(null);
     }
   };
-  
 
-   // Função de Deletar Cliente
-   const handleDeleteProduct = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/produto/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        alert("Erro ao excluir fornecedor.");
-        return;
-      }
-      setProducts(products.filter((p) => p.id !== id));
-    } catch (error) {
-      console.error("Erro ao excluir cliente:", error);
-      alert("Ocorreu um erro ao excluir o cliente.");
-    }
+  const handleDeleteProduct = (id: number) => {
+    setProducts(products.filter((p) => p.id !== id));
   };
 
   const filteredAndSortedProducts = products

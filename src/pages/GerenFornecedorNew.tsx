@@ -1,16 +1,35 @@
+import { useAppContext } from "../AppContext";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import "../index.css";
 import "../styles/PageStyles.css";
-import { Supplier as ISupplier } from "@/@types/ISupplier"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Supplier as ISupplier } from "@/@types/ISupplier";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Search, Edit, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Supplier {
   id: number;
@@ -32,76 +51,128 @@ export function SuppliersPage() {
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [filterType, setFilterType] = useState<"name" | "contact">("name");
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Função para carregar fornecedores do backend
   useEffect(() => {
-    console.log("Carregando fornecedores...");  // Verifique se isso aparece no console
-  
     const fetchSuppliers = async () => {
       try {
         const response = await fetch("http://localhost:3000/fornecedores");
-        console.log("Resposta da requisição:", response);  // Verifica a resposta da requisição
-  
         if (!response.ok) {
           throw new Error("Erro ao carregar fornecedores");
         }
-  
         const data = await response.json();
-        console.log("Dados recebidos do backend:", data);  // Verifica se os dados estão corretos
-  
-        // Verifica se os dados estão no formato esperado
         if (Array.isArray(data)) {
           setSuppliers(data);
         } else {
           throw new Error("Dados inválidos recebidos do backend");
         }
-  
       } catch (err) {
-        console.error("Erro ao carregar fornecedores:", err);  // Verifica o erro no console
         if (err instanceof Error) {
           setError(err.message);
         } else {
           setError("Um erro desconhecido ocorreu");
         }
       } finally {
-        console.log("Requisição concluída.");
         setLoading(false);
       }
     };
-  
+
     fetchSuppliers();
   }, []);
-  
-  
 
-  // Filtros e ordenação
+  const handleAddSupplier = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/fornecedor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSupplier),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.message);
+        return;
+      }
+
+      const addedSupplier = await response.json();
+      setSuppliers([...suppliers, addedSupplier]);
+      setNewSupplier({ nome: "", cnpj: "", contato: "", endereco: "" });
+      window.location.reload();
+    } catch (error) {
+      console.error("Erro ao adicionar fornecedor:", error);
+      alert("Ocorreu um erro ao adicionar o fornecedor.");
+    }
+  };
+
+  const handleEditSupplier = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
+  };
+
+  const handleUpdateSupplier = async () => {
+    if (editingSupplier) {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/fornecedor/${editingSupplier.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(editingSupplier),
+          }
+        );
+        if (!response.ok) {
+          const errorData = await response.json();
+          alert(errorData.message);
+          return;
+        }
+        const updatedSupplier = await response.json();
+        setSuppliers(
+          suppliers.map((s) => (s.id === updatedSupplier.id ? updatedSupplier : s))
+        );
+        setEditingSupplier(null);
+      } catch (error) {
+        console.error("Erro ao atualizar fornecedor:", error);
+        alert("Ocorreu um erro ao atualizar o fornecedor.");
+      }
+    }
+  };
+
+  const handleDeleteSupplier = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/fornecedor/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        alert("Erro ao excluir fornecedor.");
+        return;
+      }
+      setSuppliers(suppliers.filter((s) => s.id !== id));
+    } catch (error) {
+      console.error("Erro ao excluir fornecedor:", error);
+      alert("Ocorreu um erro ao excluir o fornecedor.");
+    }
+  };
+
   const filteredSuppliers = suppliers.filter((supplier) => {
-    const nameMatches = supplier.nome && supplier.nome.toLowerCase().includes(searchTerm.toLowerCase());
-    const contactMatches = supplier.contato && supplier.contato.toLowerCase().includes(searchTerm.toLowerCase());
+    const nameMatches =
+      supplier.nome &&
+      supplier.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const contactMatches =
+      supplier.contato &&
+      supplier.contato.toLowerCase().includes(searchTerm.toLowerCase());
     return nameMatches || contactMatches;
   });
 
   const sortedAndFilteredSuppliers = filteredSuppliers.sort((a, b) => {
-    if (sortOrder === "asc") {
-      if (a[filterType as keyof Supplier] && b[filterType as keyof Supplier]) {
-        return (a[filterType as keyof Supplier] as string).localeCompare(b[filterType as keyof Supplier] as string);
-      }
-      return 0;
-    } else {
-      if (a[filterType as keyof Supplier] && b[filterType as keyof Supplier]) {
-        return (b[filterType as keyof Supplier] as string).localeCompare(a[filterType as keyof Supplier] as string);
-      }
-      return 0;
-    }
+    const key = filterType === "name" ? "nome" : "contato";
+    return sortOrder === "asc"
+      ? a[key].localeCompare(b[key])
+      : b[key].localeCompare(a[key]);
   });
 
-  // Verificando se os fornecedores estão sendo carregados corretamente
   if (loading) return <div>Carregando fornecedores...</div>;
   if (error) return <div>Erro: {error}</div>;
-
   return (
     <div className="page-container">
       <div className="page-content">
@@ -147,6 +218,49 @@ export function SuppliersPage() {
                 <ChevronDown className="ml-2 h-4 w-4" />
               )}
             </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Fornecedor
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adicionar Fornecedor</DialogTitle>
+                </DialogHeader>
+                <div>
+                  <Label>Nome</Label>
+                  <Input
+                    value={newSupplier.nome}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, nome: e.target.value })
+                    }
+                  />
+                  <Label>CNPJ</Label>
+                  <Input
+                    value={newSupplier.cnpj}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, cnpj: e.target.value })
+                    }
+                  />
+                  <Label>Contato</Label>
+                  <Input
+                    value={newSupplier.contato}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, contato: e.target.value })
+                    }
+                  />
+                  <Label>Endereço</Label>
+                  <Input
+                    value={newSupplier.endereco}
+                    onChange={(e) =>
+                      setNewSupplier({ ...newSupplier, endereco: e.target.value })
+                    }
+                  />
+                  <Button onClick={handleAddSupplier}>Adicionar</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <Table>
@@ -155,33 +269,31 @@ export function SuppliersPage() {
                 <TableHead>Nome</TableHead>
                 <TableHead>CNPJ</TableHead>
                 <TableHead>Contato</TableHead>
-                <TableHead>Endereço</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedAndFilteredSuppliers.length > 0 ? (
-                sortedAndFilteredSuppliers.map((supplier) => (
-                  <TableRow key={supplier.id}>
-                    <TableCell>{supplier.nome}</TableCell>
-                    <TableCell>{supplier.cnpj}</TableCell>
-                    <TableCell>{supplier.contato}</TableCell>
-                    <TableCell>{supplier.endereco}</TableCell>
-                    <TableCell>
-                      <Button variant="link">
-                        <Edit className="h-5 w-5" />
-                      </Button>
-                      <Button variant="link">
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5}>Nenhum fornecedor encontrado</TableCell>
+              {sortedAndFilteredSuppliers.map((supplier) => (
+                <TableRow key={supplier.id}>
+                  <TableCell>{supplier.nome}</TableCell>
+                  <TableCell>{supplier.cnpj}</TableCell>
+                  <TableCell>{supplier.contato}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleEditSupplier(supplier)}
+                    >
+                      <Edit className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDeleteSupplier(supplier.id)}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              )}
+              ))}
             </TableBody>
           </Table>
         </div>
@@ -189,3 +301,6 @@ export function SuppliersPage() {
     </div>
   );
 }
+
+
+export default SuppliersPage;

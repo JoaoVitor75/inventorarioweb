@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAppContext } from "../AppContext";
 import "../styles/pageStyles.css";
-import { Client } from "@/@types/IClient"
+import {Client} from "@/@types/IClient"
 //import {Order} from "@/@types/IOrder"
-import axios from "axios";
 
 import "../index.css";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table,TableBody,TableCell,TableHead,TableHeader,TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Search, Edit, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 
 
 export function ClientsPage() {
@@ -30,28 +29,6 @@ export function ClientsPage() {
   const [filterType, setFilterType] = useState<"name" | "cpf_cnpj">("name");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
-
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/clientes");
-        if (!response.ok) {
-          throw new Error("Erro ao carregar clientes");
-        }
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setClients(data);
-        } else {
-          throw new Error("Dados inválidos recebidos do backend");
-        }
-      } catch (err) {
-        console.error("Erro ao carregar clientes:", err);
-      }
-    };
-
-    fetchClients();
-  }, []);
-
 
   const isCpfCnpjUnique = (cpfCnpj: string, clientId?: number) => {
     return !clients.some(
@@ -74,8 +51,7 @@ export function ClientsPage() {
     return errors;
   };
 
-  // Função de Adicionar Cliente usando a API
-  const handleAddClient = async () => {
+  const handleAddClient = () => {
     const errors = validateClient(newClient);
     if (errors.length > 0) {
       errors.forEach((error) => alert(error));
@@ -85,44 +61,16 @@ export function ClientsPage() {
       alert("CNPJ já está em uso por outro cliente.");
       return;
     }
-
-    try {
-      const response = await fetch("http://localhost:3000/client", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: newClient.name,
-          cpf_cnpj: newClient.cpf_cnpj,
-          contact: newClient.contact,
-          address: newClient.address,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao adicionar cliente");
-      }
-
-      const data = await response.json(); // Obtém a resposta do servidor
-      setClients([...clients, { ...newClient, id: data.id, isActive: true }]);
-      setNewClient({ name: "", cpf_cnpj: "", contact: "", address: "" });
-    } catch (error) {
-      // Verifica se o erro é uma instância de Error antes de acessar o message
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      alert("Erro ao adicionar cliente: " + errorMessage);
-    }
+    setClients([...clients, { ...newClient, id: Date.now(), isActive: true }]);
+    setNewClient({ name: "", cpf_cnpj: "", contact: "", address: "" });
   };
-
-
 
   const handleEditClient = (client: Client) => {
     setEditingClient(client);
     setIsEditDialogOpen(true);
   };
 
-  // Função de Atualizar Cliente
-  const handleUpdateClient = async () => {
+  const handleUpdateClient = () => {
     if (editingClient) {
       const errors = validateClient(editingClient);
       if (errors.length > 0) {
@@ -133,40 +81,30 @@ export function ClientsPage() {
         alert("CNPJ já está em uso por outro cliente.");
         return;
       }
+      setClients(
+        clients.map((c) => (c.id === editingClient.id ? editingClient : c))
+      );
+      setEditingClient(null);
+      setIsEditDialogOpen(false);
+    }
+  };
 
-      try {
-        await axios.put(`http://localhost:3000/client/${editingClient.id}`, editingClient);
+  const handleDeleteClient = (id: number) => {
+    const clientToDelete = clients.find((c) => c.id === id);
+    if (clientToDelete) {
+      const hasTransactions = orders.some((order) => order.clientId === id);
+      if (hasTransactions) {
         setClients(
-          clients.map((c) => (c.id === editingClient.id ? editingClient : c))
+          clients.map((c) => (c.id === id ? { ...c, isActive: false } : c))
         );
-        setEditingClient(null);
-        setIsEditDialogOpen(false);
-      } catch (error) {
-        // Aqui, verificamos se o erro é uma instância de Error
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        alert("Erro ao atualizar cliente: " + errorMessage);
+        alert(
+          "Cliente possui transações associadas. O cliente foi desativado em vez de excluído."
+        );
+      } else {
+        setClients(clients.filter((c) => c.id !== id));
       }
     }
   };
-
-
-  // Função de Deletar Cliente
-  const handleDeleteClient = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/cliente/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        alert("Erro ao excluir fornecedor.");
-        return;
-      }
-      setClients(clients.filter((c) => c.id !== id));
-    } catch (error) {
-      console.error("Erro ao excluir cliente:", error);
-      alert("Ocorreu um erro ao excluir o cliente.");
-    }
-  };
-
 
   const filteredClients = clients.filter((client) =>
     client[filterType].toLowerCase().includes(searchTerm.toLowerCase())

@@ -114,7 +114,7 @@ export function OrdersPage() {
     setSelectedProductQuantities({});
   };
 
-  const handleAddOrder = async () => {
+  const handleAddOrder = () => {
     const orderId = Date.now();
     const total = currentOrderItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
